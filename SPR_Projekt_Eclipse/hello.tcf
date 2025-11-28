@@ -1,0 +1,119 @@
+/*
+ *  Copyright 2010 by Texas Instruments Incorporated.
+ *  All rights reserved. Property of Texas Instruments Incorporated.
+ *  Restricted rights to use, duplicate or disclose this code are
+ *  granted through contract.
+ *
+ */
+/*
+ *  ======== hello.tcf ========
+ *  Configuration script used to generate the example's configuration files
+ */
+
+utils.loadPlatform("ti.platforms.dsk6416");
+
+bios.enableRealTimeAnalysis(prog);
+bios.enableMemoryHeaps(prog);
+bios.enableRtdx(prog);
+bios.enableTskManager(prog);
+
+/*
+ * Enable heaps in IRAM and define label SEG0 for heap usage.
+ */
+bios.IRAM.createHeap      = true;
+bios.IRAM.enableHeapLabel = true;
+bios.IRAM["heapLabel"]    = prog.extern("SEG0");
+bios.IRAM.heapSize        = 0x8000;
+bios.MEM.BIOSOBJSEG = prog.get("IRAM");
+bios.MEM.MALLOCSEG = prog.get("IRAM");
+
+/*
+ * Create and initialize a LOG object
+ */
+
+var trace;
+trace         = bios.LOG.create("trace");
+trace.bufLen  = 1024;
+trace.logType = "circular";
+
+/*
+ * Set the buffer length of LOG_system buffer
+ */
+
+bios.LOG_system.bufLen = 512;
+
+bios.STS.create("STSfloat");
+bios.STS.instance("STSfloat").unitType = "High resolution time based";
+bios.STS.create("STSfixed");
+bios.STS.instance("STSfixed").unitType = "High resolution time based";
+bios.STS.create("STSsymetric");
+bios.CLK.MICROSECONDS = 100.0000;
+bios.TSK.instance("TSK_idle").order = 1;
+bios.TSK.create("TSK_mute");
+bios.TSK.instance("TSK_mute").order = 3;
+bios.TSK.instance("TSK_mute").fxn = prog.extern("process");
+bios.TSK.instance("TSK_mute").fxn = prog.extern("tskCheck");
+bios.TSK.create("TSK_loopback");
+bios.TSK.instance("TSK_loopback").order = 4;
+bios.TSK.instance("TSK_loopback").fxn = prog.extern("tskCheck");
+bios.TSK.instance("TSK_loopback").arg0 = 1;
+bios.TSK.create("TSK_process");
+bios.TSK.instance("TSK_process").order = 5;
+bios.TSK.instance("TSK_process").fxn = prog.extern("tskProcess");
+bios.TSK.instance("TSK_process").order = 1;
+bios.TSK.instance("TSK_idle").order = 2;
+bios.TSK.instance("TSK_process").priority = 2;
+bios.IDL.create("IDL_live");
+bios.IDL.instance("IDL_live").order = 1;
+bios.IDL.instance("IDL_live").fxn = prog.extern("idlLive");
+bios.TSK.create("TSK_read");
+bios.TSK.instance("TSK_read").order = 5;
+bios.TSK.instance("TSK_read").fxn = prog.extern("AIC23_rcvIsr");
+bios.TSK.instance("TSK_read").order = 1;
+bios.TSK.instance("TSK_read").priority = 3;
+bios.TSK.create("TSK_write");
+bios.TSK.instance("TSK_write").order = 6;
+bios.TSK.instance("TSK_write").priority = 3;
+bios.TSK.instance("TSK_write").fxn = prog.extern("AIC23_xmtIsr");
+bios.SEM.create("SEM_rcv");
+bios.SEM.create("SEM_xmt");
+bios.TSK.instance("TSK_idle").order = 1;
+bios.TSK.instance("TSK_mute").order = 2;
+bios.TSK.instance("TSK_loopback").order = 3;
+bios.TSK.instance("TSK_process").order = 4;
+bios.TSK.instance("TSK_write").order = 5;
+bios.TSK.instance("TSK_read").destroy();
+bios.TSK.instance("TSK_write").destroy();
+bios.HWI.instance("HWI_INT11").interruptSource = prog.get("MCSP_2_Receive");
+bios.HWI.instance("HWI_INT11").fxn = prog.extern("AIC23_rcvIsr");
+bios.HWI.instance("HWI_INT12").interruptSource = prog.get("MCSP_2_Transmit");
+bios.HWI.instance("HWI_INT12").fxn = prog.extern("AIC23_xmtIsr");
+bios.HWI.instance("HWI_INT11").useDispatcher = 1;
+bios.HWI.instance("HWI_INT12").useDispatcher = 1;
+bios.STS.instance("STSfixed").destroy();
+bios.STS.create("STS_left");
+bios.STS.instance("STS_left").unitType = "High resolution time based";
+bios.STS.instance("STSfloat").destroy();
+bios.STS.create("STS_right");
+bios.STS.instance("STS_right").unitType = "High resolution time based";
+bios.STS.instance("STSsymetric").destroy();
+bios.TSK.create("TSK_stat");
+bios.TSK.instance("TSK_stat").order = 5;
+bios.TSK.instance("TSK_stat").fxn = prog.extern("tskStat");
+bios.TSK.instance("TSK_stat").exitFlag = 0;
+bios.TSK.instance("TSK_stat").exitFlag = 1;
+bios.TSK.instance("TSK_stat").destroy();
+bios.TSK.create("TSK_stat");
+bios.TSK.instance("TSK_stat").order = 5;
+bios.TSK.instance("TSK_stat").fxn = prog.extern("tskStat");
+bios.TSK.instance("TSK_stat").destroy();
+bios.TSK.create("TSK_printstat");
+bios.TSK.instance("TSK_printstat").order = 6;
+bios.TSK.instance("TSK_printstat").fxn = prog.extern("tskStat");
+bios.HST.HOSTLINKTYPE = "NONE";
+bios.RTDX.ENABLERTDX = 0;
+// !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
+
+if (config.hasReportedError == false) {
+    prog.gen();
+}

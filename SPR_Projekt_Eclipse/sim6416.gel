@@ -1,0 +1,31 @@
+menuitem "Simulate DIP on DSK";
+
+slider DIP0(0, 1, 1, 1, val)
+{
+/* initialize the target variable with the Parameters passed by the slider object. */
+	dip[0] = val;
+}
+
+slider DIP1(0, 1, 1, 1, val)
+{
+/* initialize the target variable with the Parameters passed by the slider object. */
+	dip[1] = val;
+}
+
+slider DIP2(0, 1, 1, 1, val)
+{
+/* initialize the target variable with the Parameters passed by the slider object. */
+	dip[2] = val;
+}
+
+slider DIP3(0, 1, 1, 1, val)
+{
+/* initialize the target variable with the Parameters passed by the slider object. */
+	dip[3] = val;
+}
+
+slider Amplitude(0, 32768, 1, 100, val)
+{
+/* initialize the target variable with the Parameters passed by the slider object. */
+	amp = val;
+}
