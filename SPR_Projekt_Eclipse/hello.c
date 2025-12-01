@@ -106,7 +106,7 @@ void tskProcess( void)
 		left = _ext( sample, 0, 16);
 		right = _ext( sample, 16, 16);
 
-		TSK_sleep(1);
+		//TSK_sleep(1);
 		/* simulace nároèného zpracování */
 		if( !DSK6416_DIP_get(3) && rand() < 1000)
 			for( k = 0; k < 50000; k++)
@@ -114,6 +114,7 @@ void tskProcess( void)
 
         STS_set(&STS_left, CLK_gethtime());
         left = echoProcessing( right, 100, 0.5f, 0.5f);
+        //left=right;
         STS_delta( &STS_left, CLK_gethtime());
 
         STS_set(&STS_right, CLK_gethtime());
@@ -216,7 +217,7 @@ Void main()
 	if( AIC23_OpenCodec( &CodecCfg) < 0)
 		exit(-1);
 
-	AIC23_SetFreq( AIC23_FREQ_44KHZ);
+	AIC23_SetFreq( AIC23_FREQ_48KHZ);
 
     /* fall into DSP/BIOS idle loop */
     return;

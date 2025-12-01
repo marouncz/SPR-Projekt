@@ -12,7 +12,7 @@
 #define FLOAT2FIXED(x)  ((x) >= 0 ? ((Int16)((x)*32768+0.5)) : ((Int16)((x)*32768-0.5)))
 
 #define BUFFER_SIZE (1<<14) //16384 samples
-#define SAMPLE_FREQ (16000)
+#define SAMPLE_FREQ (48000)
 
 Int32 delay( Int16 sample, Uint16 delayMs)
 {
