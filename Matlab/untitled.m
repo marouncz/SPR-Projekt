@@ -3,13 +3,14 @@ clear all
 close all
 
 % Parameters
-alpha = 0.8;
-beta  = 0.2/0.8;
-n     = 4801;          % <-- change delay order if needed
+alpha = 0.6;
+beta  = 0.6;
 fs    = 48000;      % Sampling rate (must be >= 2*20kHz)
+n     = fs*0.05         % <-- change delay order if needed
+
 
 % Define frequency range
-f = linspace(0, 20000, 1000);
+f = linspace(100, 150, 1000);
 w = 2*pi*f/fs;      % normalized radian frequency
 
 % Compute frequency response
