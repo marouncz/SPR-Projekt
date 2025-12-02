@@ -96,29 +96,17 @@ void tskProcess( void)
 	{
 		AIC23_Read( &sample);
 
-#ifdef SIMULATOR
-		sample = sim_input(3) > 0 ? 0x00003FFF : 0x0000C000;
-		sample |= _extu( sample, 16, 0);
-
-		IRQ_set(IRQ_EVT_RINT2);
-		IRQ_set(IRQ_EVT_XINT2);
-#endif
 		left = _ext( sample, 0, 16);
 		right = _ext( sample, 16, 16);
 
-		//TSK_sleep(1);
-		/* simulace nároèného zpracování */
-		if( !DSK6416_DIP_get(3) && rand() < 1000)
-			for( k = 0; k < 50000; k++)
-				;
 
         STS_set(&STS_left, CLK_gethtime());
-        left = echoProcessing( right, 100, 0.5f, 0.5f);
-        //left=right;
+        left = echoProcessing( left);
         STS_delta( &STS_left, CLK_gethtime());
 
         STS_set(&STS_right, CLK_gethtime());
         right = right;
+        //right = echoProcessing( right);
         STS_delta(&STS_right, CLK_gethtime());
 
         sample = _extu( right, 16, 16);
@@ -139,40 +127,56 @@ void tskStat( void)
 #else
         TSK_sleep(10000);
 #endif
-        printf( "Narocnost levy/pravy %d/%d\n", STS_left.acc / STS_left.num, STS_right.acc / STS_right.num);
-        fflush(stdout);
+        //printf( "Narocnost levy/pravy %d/%d\n", STS_left.acc / STS_left.num, STS_right.acc / STS_right.num);
+        //fflush(stdout);
     }
 }
 
 
-void tskCheck( Arg par)
+
+void tskCheck(Arg par)
 {
-	static int last[2];
+    static Uint16 last[4] = { 0, 0, 0, 0 };   // last DIP states
+    static const float alphaLUT[2] = { 0.2f, 0.6f };
+    static const float betaLUT[2] = { 0.2f, 0.3f };
+    static const Uint16 delayLUT[4] = { 50, 100, 150, 200 };
 
-	while( 1){
-		last[par] = !DSK6416_DIP_get(par);
-		if( last[par]){
-			DSK6416_LED_on(par);
-		} else
-			DSK6416_LED_off(par);
+    while (1)
+    {
+        Uint16 sw[4];
+        Uint16 i;
+        for (i = 0; i < 4; i++)
+        {
+            sw[i] = (!DSK6416_DIP_get(i)) & 0x1;
+        }
 
-		switch(par){
-		case 0:
-			AIC23_Mute(last[par]);
-			break;
-		case 1:
-			AIC23_Loopback(last[par]);
-			break;
-		}
+        // detect change
+        if (sw[0] != last[0] || sw[1] != last[1] || sw[2] != last[2]
+                || sw[3] != last[3])
+        {
+            // update last states and LEDs
 
-#ifdef SIMULATOR
-       IRQ_set( IRQ_EVT_RINT2);
-       IRQ_set( IRQ_EVT_XINT2);
-#endif
+            for (i = 0; i < 4; i++)
+            {
+                last[i] = sw[i];
+                if (sw[i])
+                    DSK6416_LED_on(i);
+                else
+                    DSK6416_LED_off(i);
+            }
 
-		while( last[par] == !DSK6416_DIP_get(par))
-			TSK_sleep(1000);
-	}
+            // parameters
+            float alpha = alphaLUT[sw[0]];   // DIP0-alpha
+            float beta = betaLUT[sw[1]];    // DIP1-beta
+            Uint16 index = (sw[2] << 1) | sw[3]; // DIP2+3-delay
+            Uint16 delay = delayLUT[index];
+
+            EchoStatus retStat = echoSetParams(delay, alpha, beta);
+
+        }
+
+        TSK_sleep(1000);
+    }
 }
 
 void idlLive( void){
@@ -180,8 +184,8 @@ void idlLive( void){
 
 	if( 500000 > ++count)
 		return;
-
-	DSK6416_LED_toggle(3);
+	//
+	//DSK6416_LED_toggle(3);
 	count = 0;
 }
 

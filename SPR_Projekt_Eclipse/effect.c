@@ -14,33 +14,45 @@
 #define BUFFER_SIZE (1<<14) //16384 samples
 #define SAMPLE_FREQ (48000)
 
-Int32 delay( Int16 sample, Uint16 delayMs)
-{
+//initial values for delay effect
+//can be changed on the fly by echoSetParams function
+static Int32 alpha_fx = FLOAT2FIXED(0.5f);
+static Int32 beta_fx = FLOAT2FIXED(0.5f);
+static Uint32 delaySamples = 100;
 
+EchoStatus echoSetParams(Uint16 delayMs, float alpha_coeff, float beta_coeff)
+{
+    // Compute delay in samples
+    delaySamples = SAMPLE_FREQ * delayMs / 1000;
+
+    if (delaySamples >= BUFFER_SIZE) {
+        delaySamples = BUFFER_SIZE - 1;
+        return ECHO_DELAY_OVERFLOW;
+    }
+
+    if (alpha_coeff < 0 || beta_coeff < 0) {
+        return ECHO_NEGATIVE_COEFF;
+    }
+
+    if (beta_coeff >= (1.0f / alpha_coeff - 1)) {
+        return ECHO_INVALID_COEFF;
+    }
+
+    alpha_fx = FLOAT2FIXED(alpha_coeff);
+    beta_fx  = FLOAT2FIXED(beta_coeff);
+
+    return ECHO_OK;
 }
 
 //delay value is in ms to not use floats
-Int16 echoProcessing( Int16 inputSample, Uint16 delayMs, float alpha_coeff, float beta_coeff)
+Int16 echoProcessing( Int16 inputSample)
 {
-
     static Int32 buffer[BUFFER_SIZE] = {0};
     static Uint32 writePtr = 0;
 
-    //Int32 alpha = FLOAT2FIXED(alpha_coeff);
-    //Int32 beta  = FLOAT2FIXED(beta_coeff);
+    //normalize
+    inputSample = inputSample / 2;
 
-    Int32 alpha = FLOAT2FIXED(0.6);
-    Int32 beta  = FLOAT2FIXED(0.6);
-
-    // Convert input to Q15 stored in upper 16 bits of 32-bit word
-    Int32 x = ((Int32)inputSample) << 16;
-
-    // Compute delay in samples
-    Uint32 delaySamples = SAMPLE_FREQ * delayMs / 1000;
-
-
-    if (delaySamples >= BUFFER_SIZE)
-        delaySamples = BUFFER_SIZE - 1;
 
     // Compute read pointer (circular)
     Uint32 readPtr = writePtr + BUFFER_SIZE - delaySamples;
@@ -49,16 +61,17 @@ Int16 echoProcessing( Int16 inputSample, Uint16 delayMs, float alpha_coeff, floa
 
     Int32 d_delay = buffer[readPtr];
 
-
+    // Convert input to Q15 stored in upper 16 bits of 32-bit word
+    Int32 x = ((Int32)inputSample) << 16;
 
     // s = alpha * delayed sample
-    Int32 s = _smpylh(alpha, d_delay);
+    Int32 s = _smpylh(alpha_fx, d_delay);
 
     // y = x + s
     Int32 y = _sadd(x, s);
 
     // d = x + beta * s
-    Int32 bs = _smpylh(beta, s);
+    Int32 bs = _smpylh(beta_fx, s);
     Int32 d = _sadd(x, bs);
 
     // Store d in circular buffer

@@ -12,8 +12,17 @@
 #include <std.h>
 
 
+typedef enum {
+    ECHO_OK = 0,              // Success
+    ECHO_DELAY_OVERFLOW,      // Delay exceeds buffer size
+    ECHO_NEGATIVE_COEFF,      // Alpha or Beta < 0
+    ECHO_INVALID_COEFF        // Normalization condition violated
+} EchoStatus;
 
-Int16 echoProcessing( Int16 sample, Uint16 delayMs, float alpha_coeff, float beta_coeff);
+
+EchoStatus echoSetParams(Uint16 delayMs, float alpha_coeff, float beta_coeff);
+
+Int16 echoProcessing( Int16 sample);
 
 
 #endif /* EFFECT_H_ */
