@@ -14,8 +14,11 @@ def echo_reverb_exact(x, Fs, N_samples, alpha, beta):
     d_buf = np.zeros((buf_len, C))
     w = 0  # write index
 
+    maxAmp = 1 + alpha/(1+alpha*beta)
+
     for n in range(T):
-        xn = x[n]
+        
+        xn = x[n]/maxAmp
 
         # read delayed d[n-N]
         r = (w - N_samples) % buf_len
@@ -38,10 +41,10 @@ def echo_reverb_exact(x, Fs, N_samples, alpha, beta):
     return y if y.shape[1] > 1 else y[:,0]
 
 
-x, Fs = sf.read("vnimanie-vnimanie-chernobyl.mp3")
-N = int(0.12 * Fs)   # 150 ms
-alpha = 0.7
-beta  = 0.7
+x, Fs = sf.read("audio_original.mp3")
+N = int(0.2 * Fs)   # 200 ms
+alpha = 0.2
+beta  = 0.2
 
 y = echo_reverb_exact(x, Fs, N, alpha, beta)
-sf.write("outputChernobyl.wav", y, Fs)
+sf.write("echoOutput.wav", y, Fs)
