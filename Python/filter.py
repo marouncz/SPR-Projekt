@@ -43,8 +43,8 @@ def echo_reverb_exact(x, Fs, N_samples, alpha, beta):
 
 x, Fs = sf.read("audio_original.mp3")
 N = int(0.2 * Fs)   # 200 ms
-alpha = 0.2
-beta  = 0.2
+alpha = 0.6
+beta  = 0.6
 
 y = echo_reverb_exact(x, Fs, N, alpha, beta)
 sf.write("echoOutput.wav", y, Fs)
