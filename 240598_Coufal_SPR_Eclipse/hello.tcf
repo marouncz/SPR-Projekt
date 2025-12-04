@@ -112,12 +112,6 @@ bios.TSK.instance("TSK_printstat").order = 6;
 bios.TSK.instance("TSK_printstat").fxn = prog.extern("tskStat");
 bios.HST.HOSTLINKTYPE = "NONE";
 bios.RTDX.ENABLERTDX = 0;
-bios.TSK.instance("TSK_loopback").order = 2;
-bios.TSK.instance("TSK_process").order = 3;
-bios.TSK.instance("TSK_printstat").order = 4;
-bios.TSK.instance("TSK_mute").destroy();
-bios.TSK.instance("TSK_process").priority = 3;
-bios.TSK.instance("TSK_printstat").priority = 2;
 // !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
 
 if (config.hasReportedError == false) {
